@@ -14,7 +14,7 @@ MOVE_LOG_HEIGHT = 512
 DIMENSION = 8
 SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
-IMAGES = {}
+}
 
 
 def drawText(screen, text, font, text_col, x, y):
