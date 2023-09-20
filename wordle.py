@@ -1,25 +1,16 @@
 """
-Stores information about the state of the game. Determines valid moves at each turn. 
+Stores information about the state of the game. Determines valid moves at each turn.
 Keeps track of moves throughout the game.
 """
 
 import pygame as p
-from multiprocessing import Process, Queue
-import json
 import time
-
-WIDTH = HEIGHT = 512
-MOVE_LOG_WIDTH = 256
-MOVE_LOG_HEIGHT = 512
-DIMENSION = 8
-SQ_SIZE = HEIGHT // DIMENSION
-MAX_FPS = 15
-}
 
 
 def drawText(screen, text, font, text_col, x, y):
     img = font.render(text, True, text_col)
-    screen.blit(img, (x,y))
+    screen.blit(img, (x, y))
+
 
 class Button():
     def __init__(self, x, y, width, height, buttonText, isHuman, onePress=False, quitting=False):
@@ -42,35 +33,6 @@ class Button():
 
     def process(self, screen):
         mousePos = p.mouse.get_pos()
-        playerTwo = False
-        run = True
-        self.buttonSurface.fill(self.fillColors['normal'])
-        if self.buttonRect.collidepoint(mousePos):
-            self.buttonSurface.fill(self.fillColors['hover'])
-            if p.mouse.get_pressed(num_buttons=3)[0]:
-                self.buttonSurface.fill(self.fillColors['pressed'])
-                if self.onePress and quitting:
-                    run = False
-                    running = False
-                elif self.onePress:
-                    playerTwo = self.isHuman
-                    run = False
-                elif not self.alreadyPressed:
-                    playerTwo = self.isHuman
-                    run = False
-                    self.alreadyPressed = True
-            else:
-                self.alreadyPressed = False
-        self.buttonSurface.blit(self.buttonSurf, [
-        self.buttonRect.width/2 - self.buttonSurf.get_rect().width/2,
-        self.buttonRect.height/2 - self.buttonSurf.get_rect().height/2
-        ])
-        screen.blit(self.buttonSurface, self.buttonRect)
-        return run, playerTwo
-    
-    def quitProcess(self, screen):
-        mousePos = p.mouse.get_pos()
-        running = True
         run = True
         self.buttonSurface.fill(self.fillColors['normal'])
         if self.buttonRect.collidepoint(mousePos):
@@ -78,156 +40,54 @@ class Button():
             if p.mouse.get_pressed(num_buttons=3)[0]:
                 self.buttonSurface.fill(self.fillColors['pressed'])
                 if self.onePress:
-                    running = False
                     run = False
                 elif not self.alreadyPressed:
-                    running = False
                     run = False
                     self.alreadyPressed = True
             else:
                 self.alreadyPressed = False
         self.buttonSurface.blit(self.buttonSurf, [
-        self.buttonRect.width/2 - self.buttonSurf.get_rect().width/2,
-        self.buttonRect.height/2 - self.buttonSurf.get_rect().height/2
+            self.buttonRect.width/2 - self.buttonSurf.get_rect().width/2,
+            self.buttonRect.height/2 - self.buttonSurf.get_rect().height/2
         ])
         screen.blit(self.buttonSurface, self.buttonRect)
-        return run, running
-    
-    def choosePiece(self, screen):
-        mousePos = p.mouse.get_pos()
-        color = False
-        run = True
-        self.buttonSurface.fill(self.fillColors['normal'])
-        if self.buttonRect.collidepoint(mousePos):
-            self.buttonSurface.fill(self.fillColors['hover'])
-            if p.mouse.get_pressed(num_buttons=3)[0]:
-                self.buttonSurface.fill(self.fillColors['pressed'])
-                if self.onePress:
-                    color = True
-                    run = False
-                elif not self.alreadyPressed:
-                    color = True
-                    run = False
-                    self.alreadyPressed = True
-            else:
-                self.alreadyPressed = False
-        self.buttonSurface.blit(self.buttonSurf, [
-        self.buttonRect.width/2 - self.buttonSurf.get_rect().width/2,
-        self.buttonRect.height/2 - self.buttonSurf.get_rect().height/2
-        ])
-        screen.blit(self.buttonSurface, self.buttonRect)
-        return run, color
-    
-    def menuProcess(self, screen):
-        mousePos = p.mouse.get_pos()
-        menu = False
-        run = True
-        self.buttonSurface.fill(self.fillColors['normal'])
-        if self.buttonRect.collidepoint(mousePos):
-            self.buttonSurface.fill(self.fillColors['hover'])
-            if p.mouse.get_pressed(num_buttons=3)[0]:
-                self.buttonSurface.fill(self.fillColors['pressed'])
-                if self.onePress:
-                    menu = True
-                    run = False
-                elif not self.alreadyPressed:
-                    menu = True
-                    run = False
-                    self.alreadyPressed = True
-            else:
-                self.alreadyPressed = False
-        self.buttonSurface.blit(self.buttonSurf, [
-        self.buttonRect.width/2 - self.buttonSurf.get_rect().width/2,
-        self.buttonRect.height/2 - self.buttonSurf.get_rect().height/2
-        ])
-        screen.blit(self.buttonSurface, self.buttonRect)
-        return run, menu
+        return run
 
 
 def main():
     p.init()
-    playerOne = True # True == Human / False (0 - 2 for level) == Computer
-    playerTwo = False
-    screen = p.display.set_mode((WIDTH + MOVE_LOG_WIDTH, HEIGHT))
+    screen = p.display.set_mode((WIDTH, HEIGHT))
+    WIDTH, HEIGHT = p.display.get_surface().get_size()
+    DIMENSION = 10
+    SQ_SIZE = HEIGHT // DIMENSION
+    MAX_FPS = 15
     p.display.set_caption("Main Menu")
     run = True
-    running = True
     font = p.font.SysFont("Helvitca", 40, False, False)
-    human = Button(2 * SQ_SIZE, 3 * SQ_SIZE, SQ_SIZE * 2, SQ_SIZE * 2, "Human", True)
-    ai = Button(8 * SQ_SIZE, 3 * SQ_SIZE, SQ_SIZE * 2, SQ_SIZE * 2, "AI", False)
-    quitButton = Button(5 * SQ_SIZE, 6.5 * SQ_SIZE, SQ_SIZE * 2, SQ_SIZE, "Quit", False)
+    play = Button(5 * SQ_SIZE, 3 * SQ_SIZE, SQ_SIZE *
+                  2, SQ_SIZE, "Play", True)
+    quit = Button(5 * SQ_SIZE, 5 * SQ_SIZE,
+                  SQ_SIZE * 2, SQ_SIZE, "Quit", False)
     while run:
-        screen.fill((139,136,120))
-        drawText(screen, "Welcome to Chess!", font, (255,255,255), SQ_SIZE * 4, SQ_SIZE)
-        drawText(screen, "Select your opponent!", font, (255,255,255), SQ_SIZE * 4 - SQ_SIZE // 2, 3 * SQ_SIZE // 2)
-        run, running = quitButton.quitProcess(screen)
-        if run and running:
-            run, playerTwo = human.process(screen)
-            if playerTwo == False and run == True:
-                run, playerTwo = ai.process(screen)
+        screen.fill((10, 10, 10))
+        drawText(screen, "Welcome to Wordle!", font,
+                 (255, 255, 255), SQ_SIZE * 4, SQ_SIZE)
+        drawText(screen, "Ready to Play?", font, (255, 255, 255),
+                 SQ_SIZE * 4.5, 3 * SQ_SIZE // 2)
+        run = quit.process(screen)
+        if run:
+            run = play.process(screen)
         else:
             return
         for e in p.event.get():
             if e.type == p.QUIT:
-                running = False
-                run = False
-                return
-        p.display.update()
-    run = True
-    white = Button(2 * SQ_SIZE, 3 * SQ_SIZE, SQ_SIZE * 2, SQ_SIZE * 2, "White", False)
-    black = Button(8 * SQ_SIZE, 3 * SQ_SIZE, SQ_SIZE * 2, SQ_SIZE * 2, "Black", False)
-    whiteBool = False
-    blackBool = False
-    time.sleep(0.25)
-    p.event.clear()
-    while run:
-        screen.fill((139,136,120))
-        drawText(screen, "Welcome to Chess!", font, (255,255,255), SQ_SIZE * 4, SQ_SIZE)
-        drawText(screen, "Select your piece color!", font, (255,255,255), SQ_SIZE * 4 - SQ_SIZE//2, 3 * SQ_SIZE // 2)
-        run, running = quitButton.quitProcess(screen)
-        if run and running:
-            run, whiteBool = white.choosePiece(screen)
-            if whiteBool == False and run == True:
-                run, blackBool = black.choosePiece(screen)
-        else:
-            return
-        for e in p.event.get():
-            if e.type == p.QUIT:
-                running = False
                 run = False
                 return
         p.display.update()
     run = True
     time.sleep(0.25)
     p.event.clear()
-    red = orange = yellow = green = blue = purple = False
-    redButton = Button(SQ_SIZE * 1, SQ_SIZE * 3, SQ_SIZE * 2, SQ_SIZE, "Red", False)
-    orangeButton = Button(SQ_SIZE * 5, SQ_SIZE * 3, SQ_SIZE * 2, SQ_SIZE, "Orange", False)
-    yellowButton = Button(SQ_SIZE * 9, SQ_SIZE * 3, SQ_SIZE * 2, SQ_SIZE, "Yellow", False)
-    greenButton = Button(SQ_SIZE * 1, SQ_SIZE * 5, SQ_SIZE * 2, SQ_SIZE, "Green", False)
-    blueButton = Button(SQ_SIZE * 5, SQ_SIZE * 5, SQ_SIZE * 2, SQ_SIZE, "Blue", False)
-    purpleButton = Button(SQ_SIZE * 9, SQ_SIZE * 5, SQ_SIZE * 2, SQ_SIZE, "Purple", False)
-    colorButtons = [redButton, orangeButton, yellowButton, greenButton, blueButton, purpleButton]
-    colors = [red, orange, yellow, green, blue, purple]
-    while run:
-        screen.fill((139,136,120))
-        drawText(screen, "Welcome to Chess!", font, (255,255,255), SQ_SIZE * 4, SQ_SIZE)
-        drawText(screen, "Select your board color!", font, (255,255,255), SQ_SIZE * 4 - SQ_SIZE//2, 3 * SQ_SIZE // 2)
-        run, running = quitButton.quitProcess(screen)
-        for i in range(len(colors)):
-            if run and running:
-                run, colors[i] = colorButtons[i].boardColor(screen)
-                if colors[i] and not run:
-                    print("Pressed")
-                    break
-        for e in p.event.get():
-            if e.type == p.QUIT:
-                running = False
-                run = False
-        p.display.update()
-    time.sleep(0.25)
-    p.event.clear()
-    boardColor = p.Color(110,139,61)
+    boardColor = p.Color(110, 139, 61)
     for i in range(len(colors)):
         if colors[i]:
             boardColor = COLORS[i]
@@ -239,7 +99,7 @@ def main():
         gs.whiteToMove = not gs.whiteToMove
         gs.board = reverseBoard(gs.board)
     else:
-        gs.whiteBool  = True
+        gs.whiteBool = True
     validMoves = gs.getValidMoves()
     moveLogFont = p.font.SysFont("Helvitca", 20, False, False)
     moveMade = False
@@ -256,10 +116,13 @@ def main():
     AIthinking = False
     moveFinderProcess = None
     moveUndone = False
-    menuButton = Button(SQ_SIZE * 8.5, SQ_SIZE * 5, SQ_SIZE * 3, SQ_SIZE, "Back to Menu", False)
-    quitButton = Button(SQ_SIZE * 9, SQ_SIZE * 7, SQ_SIZE * 2, SQ_SIZE, "Quit", False)
+    menuButton = Button(SQ_SIZE * 8.5, SQ_SIZE * 5,
+                        SQ_SIZE * 3, SQ_SIZE, "Back to Menu", False)
+    quitButton = Button(SQ_SIZE * 9, SQ_SIZE * 7,
+                        SQ_SIZE * 2, SQ_SIZE, "Quit", False)
     while running:
-        humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
+        humanTurn = (gs.whiteToMove and playerOne) or (
+            not gs.whiteToMove and playerTwo)
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
@@ -277,7 +140,8 @@ def main():
                         sqSelected = (row, col)
                         playerClicks.append(sqSelected)
                     if len(playerClicks) == 2 and humanTurn:
-                        move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
+                        move = ChessEngine.Move(
+                            playerClicks[0], playerClicks[1], gs.board)
                         for i in range(len(validMoves)):
                             if move == validMoves[i]:
                                 gs.makeMove(validMoves[i])
@@ -331,13 +195,14 @@ def main():
                 AIthinking = True
                 print("thinking...")
                 returnQueue = Queue()
-                moveFinderProcess = Process(target=ChessAI.findBestMoveAlphaBeta, args=(gs, validMoves, returnQueue))
+                moveFinderProcess = Process(
+                    target=ChessAI.findBestMoveAlphaBeta, args=(gs, validMoves, returnQueue))
                 moveFinderProcess.start()
                 start_time = time.time()
             if not moveFinderProcess.is_alive():
                 print("done thinking...")
                 res = returnQueue.get()
-                gs.makeMove(res,ai=True)
+                gs.makeMove(res, ai=True)
                 moveMade = True
                 animate = True
                 AIthinking = False
@@ -347,15 +212,17 @@ def main():
                     if AIthinking:
                         moveFinderProcess.terminate()
                         AIthinking = False
-                    
+
         if moveMade:
             if animate:
-                animateMove(gs.moveLog[-1], screen, gs.board, clock, boardColor)
+                animateMove(gs.moveLog[-1], screen,
+                            gs.board, clock, boardColor)
             validMoves = gs.getValidMoves()
             moveMade = False
             animate = False
             moveUndone = False
-        drawGameState(screen, gs, validMoves, sqSelected, moveLogFont, boardColor)
+        drawGameState(screen, gs, validMoves, sqSelected,
+                      moveLogFont, boardColor)
         running, goToMenu = menuButton.menuProcess(screen)
         running, quitting = quitButton.quitProcess(screen)
         if goToMenu:
@@ -389,6 +256,7 @@ def main():
         clock.tick(MAX_FPS)
         p.display.flip()
 
+
 def highlightStartSquares(screen, gs, validMoves, sqSelected):
     if sqSelected != ():
         r, c = sqSelected
@@ -398,16 +266,20 @@ def highlightStartSquares(screen, gs, validMoves, sqSelected):
             s.fill(p.Color("yellow"))
             screen.blit(s, (SQ_SIZE*c, SQ_SIZE*r))
 
+
 def highlightEndSquares(screen, gs, validMoves, sqSelected):
     if sqSelected != ():
         r, c = sqSelected
         if gs.board[r][c][0] == ("w" if gs.whiteToMove else "b"):
             circle = p.Surface((SQ_SIZE, SQ_SIZE))
             circle.set_alpha(100)
-            p.draw.circle(circle, (193,205,205), (SQ_SIZE//2, SQ_SIZE//2), 10)
+            p.draw.circle(circle, (193, 205, 205),
+                          (SQ_SIZE//2, SQ_SIZE//2), 10)
             for move in validMoves:
                 if move.startRow == r and move.startCol == c:
-                    screen.blit(circle, (SQ_SIZE*move.endCol, SQ_SIZE*move.endRow))
+                    screen.blit(
+                        circle, (SQ_SIZE*move.endCol, SQ_SIZE*move.endRow))
+
 
 def drawGameState(screen, gs, validMoves, sqSelected, moveLogFont, boardColor):
     drawBoard(screen, boardColor)
@@ -418,11 +290,12 @@ def drawGameState(screen, gs, validMoves, sqSelected, moveLogFont, boardColor):
 
 
 def drawBoard(screen, boardColor):
-    colors = [p.Color(255,248,220), boardColor]
+    colors = [p.Color(255, 248, 220), boardColor]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color = colors[((r+c) % 2)]
-            p.draw.rect(screen, color, p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            p.draw.rect(screen, color, p.Rect(
+                c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
 def drawPiece(screen, board):
@@ -430,7 +303,9 @@ def drawPiece(screen, board):
         for c in range(DIMENSION):
             piece = board[r][c]
             if piece != "--":
-                screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                screen.blit(IMAGES[piece], p.Rect(
+                    c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+
 
 def drawMoveLog(screen, gs, moveLogFont):
     moveLogRect = p.Rect(WIDTH, 0, MOVE_LOG_WIDTH, MOVE_LOG_HEIGHT)
@@ -459,36 +334,45 @@ def drawMoveLog(screen, gs, moveLogFont):
         screen.blit(textObj, textLocation)
         y += textObj.get_height() + space
 
+
 def animateMove(move, screen, board, clock, boardColor):
-    colors = [p.Color(255,248,220), p.Color(110,139,61)]
+    colors = [p.Color(255, 248, 220), p.Color(110, 139, 61)]
     coords = []
     dR = move.endRow - move.startRow
     dC = move.endCol - move.startCol
     framesPerSquare = 5
     frameCount = (abs(dR) + abs(dC)) * framesPerSquare
     for frame in range(frameCount + 1):
-        r, c = (move.startRow + dR * frame/frameCount, move.startCol + dC * frame/frameCount)
+        r, c = (move.startRow + dR * frame/frameCount,
+                move.startCol + dC * frame/frameCount)
         drawBoard(screen, boardColor)
         drawPiece(screen, board)
         color = colors[(move.endRow + move.endCol) % 2]
-        endSquare = p.Rect(SQ_SIZE * move.endCol, move.endRow * SQ_SIZE, SQ_SIZE, SQ_SIZE)
+        endSquare = p.Rect(SQ_SIZE * move.endCol,
+                           move.endRow * SQ_SIZE, SQ_SIZE, SQ_SIZE)
         p.draw.rect(screen, color, endSquare)
         if move.pieceCaptured != "--":
             if move.isEnpassantMove:
-                enPassantRow = move.endRow + 1 if move.pieceMoved[0] == "w" else (move.endRow - 1)
-                endSquare = p.Rect(SQ_SIZE * move.endCol, enPassantRow * SQ_SIZE, SQ_SIZE, SQ_SIZE)
+                enPassantRow = move.endRow + \
+                    1 if move.pieceMoved[0] == "w" else (move.endRow - 1)
+                endSquare = p.Rect(SQ_SIZE * move.endCol,
+                                   enPassantRow * SQ_SIZE, SQ_SIZE, SQ_SIZE)
             screen.blit(IMAGES[move.pieceCaptured], endSquare)
-        screen.blit(IMAGES[move.pieceMoved], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        screen.blit(IMAGES[move.pieceMoved], p.Rect(
+            c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
         p.display.flip()
         clock.tick(60)
+
 
 def drawEndGameText(screen, text):
     font = p.font.SysFont("Helvitca", 32, True, False)
     textObj = font.render(text, 0, p.Color("Black"))
-    textLocation = p.Rect(0,0,WIDTH, HEIGHT).move(WIDTH/2 - textObj.get_width()/2, HEIGHT/2 - textObj.get_height()/2)
+    textLocation = p.Rect(0, 0, WIDTH, HEIGHT).move(
+        WIDTH/2 - textObj.get_width()/2, HEIGHT/2 - textObj.get_height()/2)
     screen.blit(textObj, textLocation)
     textObj = font.render(text, 0, p.Color("Gray"))
-    screen.blit(textObj, textLocation.move(2,2))
+    screen.blit(textObj, textLocation.move(2, 2))
+
 
 if __name__ == "__main__":
     main()
