@@ -5,6 +5,8 @@ Keeps track of moves throughout the game.
 
 import pygame as p
 import time
+import random
+from wordList import WordList
 
 
 def drawText(screen, text, font, text_col, x, y):
@@ -56,25 +58,26 @@ class Button():
 
 def main():
     p.init()
+    clock = p.time.Clock()
     p.display.set_mode((0, 0), p.FULLSCREEN)
     WIDTH, HEIGHT = p.display.get_surface().get_size()
     screen = p.display.set_mode((WIDTH, HEIGHT))
-    DIMENSION = 10
-    SQ_SIZE = HEIGHT // DIMENSION
+    SQ_HEIGHT = HEIGHT // 14
+    SQ_WIDTH = WIDTH // 10
     MAX_FPS = 15
     p.display.set_caption("Main Menu")
     run = True
     font = p.font.SysFont("Helvitca", 60, False, False)
-    play = Button(7 * SQ_SIZE, 4 * SQ_SIZE, SQ_SIZE *
-                  2, SQ_SIZE, "Play", True)
-    quit = Button(7 * SQ_SIZE, 6 * SQ_SIZE,
-                  SQ_SIZE * 2, SQ_SIZE, "Quit", False)
+    play = Button(4 * SQ_WIDTH, 5 * SQ_HEIGHT,
+                  SQ_WIDTH * 2, SQ_HEIGHT, "Play", True)
+    quit = Button(4 * SQ_WIDTH, 7 * SQ_HEIGHT,
+                  SQ_WIDTH * 2, SQ_HEIGHT, "Quit", False)
     while run:
         screen.fill((10, 10, 10))
         drawText(screen, "Welcome to Wordle!", font,
-                 (255, 255, 255), SQ_SIZE * 5.85, SQ_SIZE)
+                 (255, 255, 255), SQ_WIDTH * 3.65, SQ_HEIGHT)
         drawText(screen, "Ready to Play?", font, (255, 255, 255),
-                 SQ_SIZE * 6.5, 2 * SQ_SIZE)
+                 SQ_WIDTH * 4, 2 * SQ_HEIGHT)
         run = quit.process(screen)
         if run:
             run = play.process(screen)
@@ -89,12 +92,52 @@ def main():
     time.sleep(0.25)
     p.event.clear()
     p.display.set_caption("Wordle")
+    word = WordList.wordList[random.randint(0, len(WordList.wordList) - 1)]
+    wordleFont = p.font.SysFont("Helvitca", 100, False, False)
+    user_text = ""
+    input_rect = p.Rect(SQ_WIDTH * 3.9, SQ_HEIGHT * 8,
+                        SQ_WIDTH * 2.2, SQ_HEIGHT * 1)
+    quit = Button(4 * SQ_WIDTH, 11 * SQ_HEIGHT,
+                  SQ_WIDTH * 2, SQ_HEIGHT, "Quit", False)
+    guessed = False
+    print(word)
     while run:
-        screen.fill((10, 10, 10))
         for e in p.event.get():
             if e.type == p.QUIT:
                 run = False
                 return
+            if e.type == p.KEYDOWN:
+                if e.key == p.K_BACKSPACE:
+                    user_text = user_text[:-1]
+                elif e.key == p.K_RETURN:
+                    user_guess = user_text
+                    user_text = ""
+                    guessed = True
+                else:
+                    if len(user_text) < 5 and e.unicode.isalpha():
+                        user_text += e.unicode.upper()
+
+        if not run:
+            return
+        screen.fill((10, 10, 10))
+        if guessed:
+            wordDictArr = []
+            for i in range(len(user_guess)):
+                if user_guess[i] == word[i]:
+                    wordDictArr.append({i: [user_guess[i], "green"]})
+                elif user_guess[i] in word:
+                    wordDictArr.append({i: [user_guess[i], "yellow"]})
+                else:
+                    wordDictArr.append({i: [user_guess[i], "gray"]})
+            print(wordDictArr)
+            guessed = False
+        color = p.Color(50, 50, 50)
+        p.draw.rect(screen, color, input_rect)
+        run = quit.process(screen)
+        text_surface = wordleFont.render(user_text, True, (255, 255, 255))
+        screen.blit(text_surface, (input_rect.x, input_rect.y))
+        p.display.flip()
+        clock.tick(60)
         p.display.update()
 
 
