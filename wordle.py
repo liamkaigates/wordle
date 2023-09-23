@@ -92,20 +92,24 @@ def main():
     time.sleep(0.25)
     p.event.clear()
     p.display.set_caption("Wordle")
-    word = WordList.wordList[random.randint(0, len(WordList.wordList) - 1)]
+    word = WordList.wordList[random.randint(
+        0, len(WordList.wordList) - 1)].upper()
     wordleFont = p.font.SysFont("Helvitca", 100, False, False)
+    gray_color = p.Color(50, 50, 50)
+    green_color = p.Color(0, 128, 0)
+    yellow_color = p.Color(255, 196, 37)
     user_text = ""
-    input_rect = p.Rect(SQ_WIDTH * 3.9, SQ_HEIGHT * 8,
+    input_rect = p.Rect(SQ_WIDTH * 3.9, SQ_HEIGHT * 9,
                         SQ_WIDTH * 2.2, SQ_HEIGHT * 1)
-    word_output_rect = [[p.Rect(SQ_WIDTH * (4 + j), SQ_HEIGHT * (1 + i),
-                        SQ_WIDTH * 1, SQ_HEIGHT * 1) for j in range(6)] for i in range(5)]
+    word_output_rect = [[[p.Rect(SQ_WIDTH * (3.75 + i * 0.5), SQ_HEIGHT * (1 + j * 1.25),
+                        SQ_WIDTH * 0.5, SQ_HEIGHT * 1.25), gray_color, ""] for i in range(5)] for j in range(6)]
     quit = Button(4 * SQ_WIDTH, 11 * SQ_HEIGHT,
                   SQ_WIDTH * 2, SQ_HEIGHT, "Quit", False)
     guessed = False
+    guessedWords = []
     numGuess = 0
     print(word)
     while run:
-        print("checkpoint 1")
         for e in p.event.get():
             if e.type == p.QUIT:
                 run = False
@@ -114,43 +118,55 @@ def main():
                 if e.key == p.K_BACKSPACE:
                     user_text = user_text[:-1]
                 elif e.key == p.K_RETURN:
-                    print(user_text)
-                    print("entered")
                     if len(user_text) == 5:
                         user_guess = user_text
                         user_text = ""
                         guessed = True
                 else:
-                    print("typing")
                     if len(user_text) < 5 and e.unicode.isalpha():
                         user_text += e.unicode.upper()
-        print("checkpoint 2")
         if not run:
             return
-        print("checkpoint 3")
         screen.fill((10, 10, 10))
-        if guessed:
-            print("checkpoint 4")
-            wordDictArr = []
-            for i in range(len(user_guess)):
-                if user_guess[i] == word[i]:
-                    wordDictArr.append({i: [user_guess[i], "green"]})
-                elif user_guess[i] in word:
-                    wordDictArr.append({i: [user_guess[i], "yellow"]})
-                else:
-                    wordDictArr.append({i: [user_guess[i], "gray"]})
-            print(wordDictArr)
-            guessed = False
-        print("checkpoint 5")
-        color = p.Color(50, 50, 50)
-        p.draw.rect(screen, color, input_rect)
-        print("checkpoint 6")
+        p.draw.rect(screen, gray_color, input_rect)
+        for i in range(6):
+            for j in range(5):
+                p.draw.rect(
+                    screen, word_output_rect[i][j][1], word_output_rect[i][j][0])
+                guess_surface = wordleFont.render(
+                    word_output_rect[i][j][2], True, (255, 255, 255))
+                screen.blit(
+                    guess_surface, (word_output_rect[i][j][0].x + 7.5, word_output_rect[i][j][0].y))
         run = quit.process(screen)
-        print("checkpoint 7")
         text_surface = wordleFont.render(user_text, True, (255, 255, 255))
-        print("checkpoint 8")
+        if guessed:
+            wordDictArr = []
+            print(user_guess)
+            print(word)
+            for i in range(len(user_guess)):
+                print(user_guess[i])
+                print(word[i])
+                if user_guess[i] == word[i]:
+                    print("green")
+                    wordDictArr.append([user_guess[i], green_color])
+                elif user_guess[i] in word:
+                    print("yellow")
+                    wordDictArr.append([user_guess[i], yellow_color])
+                else:
+                    print("gray")
+                    wordDictArr.append([user_guess[i], gray_color])
+            print(wordDictArr)
+            guess_surface = wordleFont.render(
+                user_guess, True, (255, 255, 255))
+            for i in range(len(wordDictArr)):
+                word_output_rect[numGuess][i][1] = wordDictArr[i][1]
+                word_output_rect[numGuess][i][2] = wordDictArr[i][0]
+            guessed = False
+            numGuess += 1
+        if numGuess == 6:
+            time.sleep(5)
+            return
         screen.blit(text_surface, (input_rect.x, input_rect.y))
-        print("checkpoint 9")
         clock.tick(60)
         p.display.flip()
 
