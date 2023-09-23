@@ -97,11 +97,15 @@ def main():
     user_text = ""
     input_rect = p.Rect(SQ_WIDTH * 3.9, SQ_HEIGHT * 8,
                         SQ_WIDTH * 2.2, SQ_HEIGHT * 1)
+    word_output_rect = [[p.Rect(SQ_WIDTH * (4 + j), SQ_HEIGHT * (1 + i),
+                        SQ_WIDTH * 1, SQ_HEIGHT * 1) for j in range(6)] for i in range(5)]
     quit = Button(4 * SQ_WIDTH, 11 * SQ_HEIGHT,
                   SQ_WIDTH * 2, SQ_HEIGHT, "Quit", False)
     guessed = False
+    numGuess = 0
     print(word)
     while run:
+        print("checkpoint 1")
         for e in p.event.get():
             if e.type == p.QUIT:
                 run = False
@@ -110,17 +114,23 @@ def main():
                 if e.key == p.K_BACKSPACE:
                     user_text = user_text[:-1]
                 elif e.key == p.K_RETURN:
-                    user_guess = user_text
-                    user_text = ""
-                    guessed = True
+                    print(user_text)
+                    print("entered")
+                    if len(user_text) == 5:
+                        user_guess = user_text
+                        user_text = ""
+                        guessed = True
                 else:
+                    print("typing")
                     if len(user_text) < 5 and e.unicode.isalpha():
                         user_text += e.unicode.upper()
-
+        print("checkpoint 2")
         if not run:
             return
+        print("checkpoint 3")
         screen.fill((10, 10, 10))
         if guessed:
+            print("checkpoint 4")
             wordDictArr = []
             for i in range(len(user_guess)):
                 if user_guess[i] == word[i]:
@@ -131,14 +141,18 @@ def main():
                     wordDictArr.append({i: [user_guess[i], "gray"]})
             print(wordDictArr)
             guessed = False
+        print("checkpoint 5")
         color = p.Color(50, 50, 50)
         p.draw.rect(screen, color, input_rect)
+        print("checkpoint 6")
         run = quit.process(screen)
+        print("checkpoint 7")
         text_surface = wordleFont.render(user_text, True, (255, 255, 255))
+        print("checkpoint 8")
         screen.blit(text_surface, (input_rect.x, input_rect.y))
-        p.display.flip()
+        print("checkpoint 9")
         clock.tick(60)
-        p.display.update()
+        p.display.flip()
 
 
 if __name__ == "__main__":
