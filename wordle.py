@@ -95,18 +95,24 @@ def main():
     word = WordList.wordList[random.randint(
         0, len(WordList.wordList) - 1)].upper()
     wordleFont = p.font.SysFont("Helvitca", 100, False, False)
+    invalidFont = p.font.SysFont("Helvitca", 75, True, False)
     gray_color = p.Color(50, 50, 50)
     green_color = p.Color(0, 128, 0)
     yellow_color = p.Color(255, 196, 37)
     user_text = ""
     input_rect = p.Rect(SQ_WIDTH * 3.9, SQ_HEIGHT * 9,
                         SQ_WIDTH * 2.2, SQ_HEIGHT * 1)
+    invalid_rect = p.Rect(SQ_WIDTH * 2.7, SQ_HEIGHT * 4,
+                          SQ_WIDTH * 4.4, SQ_HEIGHT * 2)
+    invalid_guess = [False, False]
+    invalid_count = 60
     word_output_rect = [[[p.Rect(SQ_WIDTH * (3.75 + i * 0.5), SQ_HEIGHT * (1 + j * 1.25),
                         SQ_WIDTH * 0.5, SQ_HEIGHT * 1.25), gray_color, ""] for i in range(5)] for j in range(6)]
     quit = Button(4 * SQ_WIDTH, 11 * SQ_HEIGHT,
                   SQ_WIDTH * 2, SQ_HEIGHT, "Quit", False)
     guessed = False
     guessedWords = []
+    user_guess = ""
     numGuess = 0
     print(word)
     while run:
@@ -120,13 +126,16 @@ def main():
                 elif e.key == p.K_RETURN:
                     if len(user_text) == 5:
                         user_guess = user_text
-                        user_text = ""
-                        guessed = True
+                        if user_guess in guessedWords or user_guess.lower() not in WordList.wordList:
+                            invalid_guess = [
+                                user_guess in guessedWords, user_guess.lower() not in WordList.wordList]
+                        else:
+                            guessed = True
+                            user_text = ""
+                            guessedWords.append(user_guess)
                 else:
                     if len(user_text) < 5 and e.unicode.isalpha():
                         user_text += e.unicode.upper()
-        if not run:
-            return
         screen.fill((10, 10, 10))
         p.draw.rect(screen, gray_color, input_rect)
         for i in range(6):
@@ -141,21 +150,13 @@ def main():
         text_surface = wordleFont.render(user_text, True, (255, 255, 255))
         if guessed:
             wordDictArr = []
-            print(user_guess)
-            print(word)
             for i in range(len(user_guess)):
-                print(user_guess[i])
-                print(word[i])
                 if user_guess[i] == word[i]:
-                    print("green")
                     wordDictArr.append([user_guess[i], green_color])
                 elif user_guess[i] in word:
-                    print("yellow")
                     wordDictArr.append([user_guess[i], yellow_color])
                 else:
-                    print("gray")
                     wordDictArr.append([user_guess[i], gray_color])
-            print(wordDictArr)
             guess_surface = wordleFont.render(
                 user_guess, True, (255, 255, 255))
             for i in range(len(wordDictArr)):
@@ -163,12 +164,29 @@ def main():
                 word_output_rect[numGuess][i][2] = wordDictArr[i][0]
             guessed = False
             numGuess += 1
-        if numGuess == 6:
-            time.sleep(5)
-            return
         screen.blit(text_surface, (input_rect.x, input_rect.y))
         clock.tick(60)
+        if invalid_guess[0] or invalid_guess[1]:
+            p.draw.rect(screen, gray_color, invalid_rect)
+            if invalid_guess[0]:
+                invalid_surface = invalidFont.render(
+                    "ALREADY GUESSED", True, (255, 255, 255))
+                screen.blit(
+                    invalid_surface, (invalid_rect.x + SQ_WIDTH * 0.15, invalid_rect.y + SQ_HEIGHT * 0.5))
+            elif invalid_guess[1]:
+                invalid_surface = invalidFont.render(
+                    "NOT IN WORD LIST", True, (255, 255, 255))
+                screen.blit(
+                    invalid_surface, (invalid_rect.x + SQ_WIDTH * 0.15, invalid_rect.y + SQ_HEIGHT * 0.5))
+            if invalid_count == 0:
+                invalid_count = 60
+                invalid_guess = [False, False]
+            else:
+                invalid_count -= 1
         p.display.flip()
+        if numGuess == 6 or word == user_guess:
+            time.sleep(5)
+            return
 
 
 if __name__ == "__main__":
