@@ -111,9 +111,15 @@ def main():
     quit = Button(4 * SQ_WIDTH, 11 * SQ_HEIGHT,
                   SQ_WIDTH * 2, SQ_HEIGHT, "Quit", False)
     guessed = False
+    endGame = False
     guessedWords = []
+    playAgain = Button(4 * SQ_WIDTH, 7 * SQ_HEIGHT,
+                       SQ_WIDTH * 2, SQ_HEIGHT, "Play Again", False)
+    playAgainRect = p.Rect(SQ_WIDTH * 3.9, SQ_HEIGHT * 4,
+                           SQ_WIDTH * 2.2, SQ_HEIGHT * 1.5)
     user_guess = ""
     numGuess = 0
+    text = ""
     print(word)
     while run:
         for e in p.event.get():
@@ -137,6 +143,7 @@ def main():
                     if len(user_text) < 5 and e.unicode.isalpha():
                         user_text += e.unicode.upper()
         screen.fill((10, 10, 10))
+        run = quit.process(screen)
         p.draw.rect(screen, gray_color, input_rect)
         for i in range(6):
             for j in range(5):
@@ -146,7 +153,6 @@ def main():
                     word_output_rect[i][j][2], True, (255, 255, 255))
                 screen.blit(
                     guess_surface, (word_output_rect[i][j][0].x + 7.5, word_output_rect[i][j][0].y))
-        run = quit.process(screen)
         text_surface = wordleFont.render(user_text, True, (255, 255, 255))
         if guessed:
             wordDictArr = []
@@ -183,10 +189,33 @@ def main():
                 invalid_guess = [False, False]
             else:
                 invalid_count -= 1
+        if numGuess == 6 or word == user_guess or endGame:
+            if word == user_guess:
+                text = "You Win"
+            elif numGuess == 6:
+                text = "You Lose"
+            p.draw.rect(screen, p.Color(0, 0, 0), playAgainRect)
+            play_again_surface = invalidFont.render(
+                text, True, (255, 255, 255))
+            screen.blit(
+                play_again_surface, (playAgainRect.x + SQ_WIDTH * 0.25, playAgainRect.y + SQ_HEIGHT * 0.4))
+            endGame = True
+            numGuess = 0
+            user_guess = ""
+            run = playAgain.process(screen)
+            if not run:
+                endGame = False
+                run = True
+                word = WordList.wordList[random.randint(
+                    0, len(WordList.wordList) - 1)].upper()
+                word_output_rect = [[[p.Rect(SQ_WIDTH * (3.75 + i * 0.5), SQ_HEIGHT * (1 + j * 1.25),
+                                             SQ_WIDTH * 0.5, SQ_HEIGHT * 1.25), gray_color, ""] for i in range(5)] for j in range(6)]
+                guessedWords = []
+                invalid_guess = [False, False]
+            run = quit.process(screen)
+            if not run:
+                return
         p.display.flip()
-        if numGuess == 6 or word == user_guess:
-            time.sleep(5)
-            return
 
 
 if __name__ == "__main__":
