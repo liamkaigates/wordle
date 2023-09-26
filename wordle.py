@@ -5,7 +5,9 @@ Keeps track of moves throughout the game.
 
 import pygame as p
 import time
+import sys
 import random
+from pygame.locals import *
 from wordList import WordList
 
 
@@ -33,7 +35,7 @@ class Button():
         self.buttonRect = p.Rect(self.x, self.y, self.width, self.height)
         self.buttonSurf = font.render(buttonText, True, (20, 20, 20))
 
-    def process(self, screen):
+    def process(self, screen, endQuit=False):
         mousePos = p.mouse.get_pos()
         run = True
         self.buttonSurface.fill(self.fillColors['normal'])
@@ -43,9 +45,13 @@ class Button():
                 self.buttonSurface.fill(self.fillColors['pressed'])
                 if self.onePress:
                     run = False
+                    if endQuit:
+                        exit(0)
                 elif not self.alreadyPressed:
                     run = False
                     self.alreadyPressed = True
+                    if endQuit:
+                        exit(0)
             else:
                 self.alreadyPressed = False
         self.buttonSurface.blit(self.buttonSurf, [
@@ -117,15 +123,19 @@ def main():
                        SQ_WIDTH * 2, SQ_HEIGHT, "Play Again", False)
     playAgainRect = p.Rect(SQ_WIDTH * 3.9, SQ_HEIGHT * 4,
                            SQ_WIDTH * 2.2, SQ_HEIGHT * 1.5)
+    lost_word_rect = p.Rect(SQ_WIDTH * 2.2, SQ_HEIGHT * 2,
+                            SQ_WIDTH * 5.4, SQ_HEIGHT * 1.5)
     user_guess = ""
     numGuess = 0
     text = ""
+    playAgainBool = True
+    lost = False
     print(word)
     while run:
         for e in p.event.get():
             if e.type == p.QUIT:
-                run = False
-                return
+                p.quit()
+                sys.exit()
             if e.type == p.KEYDOWN:
                 if e.key == p.K_BACKSPACE:
                     user_text = user_text[:-1]
@@ -143,7 +153,9 @@ def main():
                     if len(user_text) < 5 and e.unicode.isalpha():
                         user_text += e.unicode.upper()
         screen.fill((10, 10, 10))
-        run = quit.process(screen)
+        quitBool = quit.process(screen)
+        if not quitBool:
+            run = False
         p.draw.rect(screen, gray_color, input_rect)
         for i in range(6):
             for j in range(5):
@@ -194,16 +206,23 @@ def main():
                 text = "You Win"
             elif numGuess == 6:
                 text = "You Lose"
+                lost = True
             p.draw.rect(screen, p.Color(0, 0, 0), playAgainRect)
             play_again_surface = invalidFont.render(
                 text, True, (255, 255, 255))
             screen.blit(
                 play_again_surface, (playAgainRect.x + SQ_WIDTH * 0.25, playAgainRect.y + SQ_HEIGHT * 0.4))
+            if lost:
+                p.draw.rect(screen, p.Color(0, 0, 0), lost_word_rect)
+                lost_surface = invalidFont.render(
+                    "The word was " + word, True, (255, 255, 255))
+                screen.blit(
+                    lost_surface, (lost_word_rect.x + SQ_WIDTH * 0.3, lost_word_rect.y + SQ_HEIGHT * 0.4))
             endGame = True
             numGuess = 0
             user_guess = ""
-            run = playAgain.process(screen)
-            if not run:
+            playAgainBool = playAgain.process(screen)
+            if not playAgainBool:
                 endGame = False
                 run = True
                 word = WordList.wordList[random.randint(
@@ -212,10 +231,11 @@ def main():
                                              SQ_WIDTH * 0.5, SQ_HEIGHT * 1.25), gray_color, ""] for i in range(5)] for j in range(6)]
                 guessedWords = []
                 invalid_guess = [False, False]
-            run = quit.process(screen)
-            if not run:
-                return
+                lost = False
         p.display.flip()
+        quitBool = quit.process(screen, endQuit=True)
+        if not quitBool:
+            run = False
 
 
 if __name__ == "__main__":
