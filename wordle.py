@@ -130,7 +130,6 @@ def main():
     text = ""
     playAgainBool = True
     lost = False
-    word = "ROUSE"
     while run:
         for e in p.event.get():
             if e.type == p.QUIT:
@@ -189,7 +188,6 @@ def main():
                 elif user_guess[i] in word and 0 == letterGuessDict[i][0]:
                     wordDictArr[i] = [user_guess[i], gray_color]
                     letterGuessDict[i][0] += 1
-            print(wordDictArr)
             guess_surface = wordleFont.render(
                 user_guess, True, (255, 255, 255))
             for i in range(len(wordDictArr)):
