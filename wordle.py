@@ -130,7 +130,7 @@ def main():
     text = ""
     playAgainBool = True
     lost = False
-    print(word)
+    word = "ROUSE"
     while run:
         for e in p.event.get():
             if e.type == p.QUIT:
@@ -167,14 +167,29 @@ def main():
                     guess_surface, (word_output_rect[i][j][0].x + 7.5, word_output_rect[i][j][0].y))
         text_surface = wordleFont.render(user_text, True, (255, 255, 255))
         if guessed:
-            wordDictArr = []
+            wordDictArr = [[], [], [], [], []]
+            letterCountDict = {word[i]: word.count(
+                word[i]) for i in range(len(word))}
+            letterGuessDict = {i: [0, user_guess[i]]
+                               for i in range(len(user_guess))}
             for i in range(len(user_guess)):
                 if user_guess[i] == word[i]:
-                    wordDictArr.append([user_guess[i], green_color])
-                elif user_guess[i] in word:
-                    wordDictArr.append([user_guess[i], yellow_color])
-                else:
-                    wordDictArr.append([user_guess[i], gray_color])
+                    wordDictArr[i] = [user_guess[i], green_color]
+                    letterCountDict[user_guess[i]] -= 1
+                    letterGuessDict[i][0] += 1
+            for i in range(len(user_guess)):
+                if user_guess[i] in word and user_guess[i] != word[i] and letterCountDict[user_guess[i]] > 0:
+                    wordDictArr[i] = [user_guess[i], yellow_color]
+                    letterCountDict[user_guess[i]] -= 1
+                    letterGuessDict[i][0] += 1
+            for i in range(len(user_guess)):
+                if user_guess[i] not in word:
+                    wordDictArr[i] = [user_guess[i], gray_color]
+                    letterGuessDict[i][0] += 1
+                elif user_guess[i] in word and 0 == letterGuessDict[i][0]:
+                    wordDictArr[i] = [user_guess[i], gray_color]
+                    letterGuessDict[i][0] += 1
+            print(wordDictArr)
             guess_surface = wordleFont.render(
                 user_guess, True, (255, 255, 255))
             for i in range(len(wordDictArr)):
