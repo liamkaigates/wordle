@@ -1,8 +1,3 @@
-"""
-Stores information about the state of the game. Determines valid moves at each turn.
-Keeps track of moves throughout the game.
-"""
-
 import pygame as p
 import time
 import sys
@@ -70,7 +65,6 @@ def main():
     screen = p.display.set_mode((WIDTH, HEIGHT))
     SQ_HEIGHT = HEIGHT // 14
     SQ_WIDTH = WIDTH // 10
-    MAX_FPS = 15
     p.display.set_caption("Main Menu")
     run = True
     font = p.font.SysFont("Helvitca", 60, False, False)
@@ -135,7 +129,7 @@ def main():
             if e.type == p.QUIT:
                 p.quit()
                 sys.exit()
-            if e.type == p.KEYDOWN:
+            elif e.type == p.KEYDOWN:
                 if e.key == p.K_BACKSPACE:
                     user_text = user_text[:-1]
                 elif e.key == p.K_RETURN:
